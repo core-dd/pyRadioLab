@@ -1,7 +1,7 @@
 
+from datetime import datetime
 import numpy as np
-import time
-
+from time import sleep
 
 class AntennaPatternSweep(object):
 
@@ -38,45 +38,49 @@ class AntennaPatternSweep(object):
         self._stop_angle = angle
 
     def log_timestamped(self, message):
-        print('[%s]:\t%s' % (time.strftime('%H:%m'), message))
+        print('[%s]:\t%s' % (datetime.now().strftime('%H:%M:%S'), message))
 
     def run(self):
         if self._mode is 'continuous':
-            self._run_continuous()
+            return self._run_continuous()
 
     def _run_continuous(self):
-        t_start = time.localtime()
+        t_start = datetime.now()
         orig_position = self._rotor.position
         self.log_timestamped('Starting a rotor sweep measurement collecting data continuously')
 
         self.log_timestamped('Moving to start position')
         self._rotor.move_absolute(self._start_angle)
-        while self._rotor.position - self._start_angle < self._angle_accuracy:
+        while np.abs(self._rotor.position - self._start_angle) > self._angle_accuracy:
             if self._debug:
                 print("\tPosition: %f" % self._rotor.position)
-            time.sleep(1)
+            sleep(1)
         self.log_timestamped('Start position reached')
+        sleep(1)
 
         positions = []
         data = []
         self.log_timestamped('Starting sweep whilst collecting data')
         self._rotor.move_absolute(self._stop_angle)
-        while self._rotor.position - self._stop_angle < self._angle_accuracy:
+        while np.abs(self._rotor.position - self._stop_angle) > self._angle_accuracy:
             # TODO: progress bar :)
             positions.append(self._rotor.position)
             data.append(self._vna.read_data())
         self.log_timestamped('End position reached')
         self.log_timestamped('Collected %i data points' % (len(data)))
 
+        sleep(1)
         self.log_timestamped('Moving to original position')
-        while self._rotor.position - orig_position < self._angle_accuracy:
+        self._rotor.move_absolute(orig_position)
+        while np.abs(self._rotor.position - orig_position) > self._angle_accuracy:
             if self._debug:
                 print("\tPosition: %f" % self._rotor.position)
-            time.sleep(1)
+            sleep(1)
         self.log_timestamped('Original position reached')
 
-        t_stop = time.localtime()
-        self.log_timestamped('Continuous sweep finished in %i seconds' % (t_stop - t_start))
+
+        t_stop = datetime.now()
+        self.log_timestamped('Continuous sweep finished in %s' % str(t_stop - t_start))
 
         return np.array(positions), np.array(data)
 
