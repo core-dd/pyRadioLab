@@ -33,7 +33,9 @@ class HP8510(Instrument):
         self.write('LOGM;')                                                     # cartesian log mag format on VNA screen
 
     def _parse_data(self, command):
-        raw_data = self.query(command)
+        # TODO: investigate pyVISA helpers to read binary data
+        self.write(command)
+        raw_data = self.resource.read_raw()
         if self._debug:
             print(raw_data)
 
@@ -53,7 +55,7 @@ class HP8510(Instrument):
         return payload
 
     def read_data(self):
-        return self._parse_data('OUTPDATA')
+        return self._parse_data('OUTPDATA;')
 
     @property
     def transfer_format(self):
