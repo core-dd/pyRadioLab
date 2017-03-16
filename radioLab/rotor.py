@@ -42,24 +42,24 @@ class NewportMM4005(Rotor):
 
     @property
     def position(self):
-        pos = self.query('4TP;')
+        pos = self.query('4TP;')[3:]
         if self._debug:
             print('Position: %s' % pos)
-        return pos
+        return float(pos)
 
     @property
     def desired_position(self):
-        pos = self.query('4DP;')
+        pos = self.query('4DP;')[3:]
         if self._debug:
             print('Desired position: %s' % pos)
-        return pos
+        return float(pos)
 
     @property
     def velocity(self):
-        vel = self.query('4DV;')
+        vel = self.query('4DV;')[3:]
         if self._debug:
             print('Desired velocity: %s' % vel)
-        return vel
+        return float(vel)
 
     @velocity.setter
     def velocity(self, velocity):
@@ -67,7 +67,7 @@ class NewportMM4005(Rotor):
 
     @property
     def acceleration(self):
-        return self.query('4DA;')
+        return float(self.query('4DA;')[3:])
 
     @acceleration.setter
     def acceleration(self, acceleration):
