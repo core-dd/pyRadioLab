@@ -19,7 +19,7 @@ class HP8510(Instrument):
 
     SCATTERING_PARAMETERS = ('S11', 'S21', 'S12', 'S22')
 
-    def __init__(self, address=DEFAULT_ADDRESS, **kwargs):
+    def __init__(self, address=DEFAULT_ADDRESS, synchronised=False, **kwargs):
         super().__init__(address=address, **kwargs)
         self._debug = kwargs.get('debug', False)
 
@@ -33,6 +33,8 @@ class HP8510(Instrument):
         self._frequencies = np.array([1e9])
         self.set_frequency_list(kwargs.get('frequencies', np.array([1e9])))
         self.write('LOGM;')                                                     # cartesian log mag format on VNA screen
+        self._synchronised = False
+        self.synchronised = synchronised
 
     def _parse_data(self, command):
         # TODO: investigate pyVISA helpers to read binary data
@@ -57,6 +59,8 @@ class HP8510(Instrument):
         return payload
 
     def read_data(self):
+        if self._synchronised:
+            self.write('SING;')     # blocks GPIB bus until single sweep is finished, ensures read data is new!
         return self._parse_data('OUTPDATA;')
 
     @property
@@ -109,3 +113,17 @@ class HP8510(Instrument):
             self._s_parameter = parameter
         else:
             raise ValueError("Scattering parameter %s not know to HP8510. Choose between S11, S21, S12, S22!")
+
+    @property
+    def synchronised(self):
+        return self._synchronised
+
+    @synchronised.setter
+    def synchronised(self, value):
+        if value:
+            # use single sweep mode
+            self.write('SING;')
+        else:
+            # use continous sweep mode
+            self.write('CONT;')
+        self._synchronised = value
