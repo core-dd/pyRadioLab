@@ -10,9 +10,9 @@ class HP8510(Instrument):
     NAME = 'HP8510'
 
     DATA_TRANSFER_FORMATS = (
-        'FORM1',  # only raw data, fast CW mode, fastest transfer format
-        'FROM2',  # 32-bit IEEE 728 floating point '>c8'
-        'FORM3',  # 64-bit IEEE 728 floating point '>c16'
+        'FORM1',  # only raw data, fast CW mode, fastest transfer format            (15 bit mantissa &  7 bit exponent)
+        'FROM2',  # 32-bit IEEE 728 floating point '>c8'                            (23 bit mantissa &  8 bit exponent)
+        'FORM3',  # 64-bit IEEE 728 floating point '>c16'                           (52 bit mantissa & 11 bit exponent)
         'FORM4',  # ASCII, slowest transfer format
         'FORM5',  # 32-bit DOS compatible floating point
     )
@@ -25,7 +25,9 @@ class HP8510(Instrument):
 
         # initialise VNA
         self._transfer_format = ''
-        self.transfer_format = kwargs.get('transfer_format', 'FORM3')           # work with FORM3 as standard setting
+        self.transfer_format = kwargs.get('transfer_format', 'FORM2')           # work with FORM2 as standard setting
+        # float with 32 bit is chosen as standard as no accuracy gain is expected for 64 bit due to internal
+        # format having only 15 bit in the mantissa
         self._s_parameter = ''
         self.s_parameter = kwargs.get('scattering_parameter', 'S11')
         self._frequencies = np.array([1e9])
