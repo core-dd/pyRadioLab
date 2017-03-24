@@ -56,7 +56,7 @@ class AntennaPatternSweep(object):
                 print("\tPosition: %f" % self._rotor.position)
             sleep(1)
         self.log_timestamped('Start position reached')
-        sleep(1)
+        sleep(2)
 
         positions = []
         data = []
