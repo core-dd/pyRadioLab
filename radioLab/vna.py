@@ -11,7 +11,7 @@ class HP8510(Instrument):
 
     DATA_TRANSFER_FORMATS = (
         'FORM1',  # only raw data, fast CW mode, fastest transfer format            (15 bit mantissa &  7 bit exponent)
-        'FROM2',  # 32-bit IEEE 728 floating point '>c8'                            (23 bit mantissa &  8 bit exponent)
+        'FORM2',  # 32-bit IEEE 728 floating point '>c8'                            (23 bit mantissa &  8 bit exponent)
         'FORM3',  # 64-bit IEEE 728 floating point '>c16'                           (52 bit mantissa & 11 bit exponent)
         'FORM4',  # ASCII, slowest transfer format
         'FORM5',  # 32-bit DOS compatible floating point
@@ -32,9 +32,9 @@ class HP8510(Instrument):
         self.s_parameter = kwargs.get('scattering_parameter', 'S11')
         self._frequencies = np.array([1e9])
         self.set_frequency_list(kwargs.get('frequencies', np.array([1e9])))
-        self.write('LOGM;')                                                     # cartesian log mag format on VNA screen
         self._synchronised = False
         self.synchronised = synchronised
+        self.write('LOGM;')  # cartesian log mag format on VNA screen
 
     def _parse_data(self, command):
         # TODO: investigate pyVISA helpers to read binary data
@@ -47,7 +47,7 @@ class HP8510(Instrument):
             # parse header, size (two-byte number) [in # of bytes] and payload (re/im pairs of 32 bit IEEE 728 FP)
             header = raw_data[:2]
             size = raw_data[2:4]
-            payload = np.fromstring(raw_data[4:], dtype='>c18')  # '>c8' big endian complex 64 bit
+            payload = np.fromstring(raw_data[4:], dtype='>c8')  # '>c8' big endian complex 64 bit
         elif self._transfer_format is 'FORM3':
             # parse header, size (two-byte number) [in # of bytes] and payload (re/im pairs of 64 bit IEEE 728 FP)
             header = raw_data[:2]
