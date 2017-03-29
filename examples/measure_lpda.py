@@ -5,7 +5,7 @@ from datetime import datetime
 import numpy as np
 from time import sleep
 
-vna = HP8510()
+vna = HP8510(synchronised=True)
 rot = NewportMM4005(velocity=3)
 experiment = AntennaPatternSweep(vna, rot)
 vna.s_parameter = 'S12'
