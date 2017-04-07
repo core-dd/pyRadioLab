@@ -2,6 +2,7 @@
 from datetime import datetime
 import numpy as np
 from time import sleep
+from tqdm import tqdm
 
 class AntennaPatternSweep(object):
 
@@ -51,36 +52,61 @@ class AntennaPatternSweep(object):
         orig_position = self._rotor.position
         self.log_timestamped('Starting a rotor sweep measurement collecting data continuously')
 
-        self.log_timestamped('Moving to start position')
+        pbar = tqdm(desc='Moving to start position', total=np.abs(self._start_angle-orig_position), unit=' deg',
+                    dynamic_ncols=True)
+        last_pos = self._rotor.position
+        curr_pos = last_pos
         self._rotor.velocity = self._positioning_velocity
         self._rotor.move_absolute(self._start_angle)
         while np.abs(self._rotor.position - self._start_angle) > self._angle_accuracy:
+            curr_pos = self._rotor.position
+            pbar.update(np.abs(curr_pos-last_pos))
+            last_pos = curr_pos
             if self._debug:
                 print("\tPosition: %f" % self._rotor.position)
             sleep(1)
+        pbar.update(np.abs(last_pos - self._rotor.position))
+        pbar.close()
         self.log_timestamped('Start position reached')
         sleep(2)
 
         positions = []
         data = []
         self.log_timestamped('Starting sweep whilst collecting data')
+
+        pbar = tqdm(desc='Moving to end position', total=np.abs(self._stop_angle-self._start_angle), unit=' deg',
+                    dynamic_ncols=True)
+        last_pos = self._rotor.position
+        curr_pos = last_pos
         self._rotor.velocity = self._sweep_velocity
         self._rotor.move_absolute(self._stop_angle)
         while np.abs(self._rotor.position - self._stop_angle) > self._angle_accuracy:
-            # TODO: progress bar :)
+            curr_pos = self._rotor.position
+            pbar.update(np.abs(curr_pos-last_pos))
+            last_pos = curr_pos
             positions.append(self._rotor.position)
             data.append(self._vna.read_data())
+        pbar.update(np.abs(last_pos - self._rotor.position))
+        pbar.close()
         self.log_timestamped('End position reached')
         self.log_timestamped('Collected %i data points' % (len(data)))
 
         sleep(1)
-        self.log_timestamped('Moving to original position')
+        pbar = tqdm(desc='Moving to original position', total=np.abs(orig_position-self._stop_angle), unit=' deg',
+                    dynamic_ncols=True)
+        last_pos = self._rotor.position
+        curr_pos = last_pos
         self._rotor.velocity = self._positioning_velocity
         self._rotor.move_absolute(orig_position)
         while np.abs(self._rotor.position - orig_position) > self._angle_accuracy:
+            curr_pos = self._rotor.position
+            pbar.update(np.abs(curr_pos-last_pos))
+            last_pos = curr_pos
             if self._debug:
                 print("\tPosition: %f" % self._rotor.position)
             sleep(1)
+        pbar.update(np.abs(last_pos - self._rotor.position))
+        pbar.close()
         self.log_timestamped('Original position reached')
 
         t_stop = datetime.now()
