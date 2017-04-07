@@ -14,6 +14,8 @@ class AntennaPatternSweep(object):
         self._start_angle = start_angle
         self._stop_angle = stop_angle
         self._angle_accuracy = kwargs.get('angle_accuracy', 0.1)
+        self._positioning_velocity = kwargs.get('positioning_velocity', 8)
+        self._sweep_velocity= kwargs.get('sweep_velocity', 3)
 
         if mode is not 'continuous':
             raise NotImplementedError("Only continuous sweep implemented")
@@ -50,6 +52,7 @@ class AntennaPatternSweep(object):
         self.log_timestamped('Starting a rotor sweep measurement collecting data continuously')
 
         self.log_timestamped('Moving to start position')
+        self._rotor.velocity = self._positioning_velocity
         self._rotor.move_absolute(self._start_angle)
         while np.abs(self._rotor.position - self._start_angle) > self._angle_accuracy:
             if self._debug:
@@ -61,6 +64,7 @@ class AntennaPatternSweep(object):
         positions = []
         data = []
         self.log_timestamped('Starting sweep whilst collecting data')
+        self._rotor.velocity = self._sweep_velocity
         self._rotor.move_absolute(self._stop_angle)
         while np.abs(self._rotor.position - self._stop_angle) > self._angle_accuracy:
             # TODO: progress bar :)
@@ -71,13 +75,13 @@ class AntennaPatternSweep(object):
 
         sleep(1)
         self.log_timestamped('Moving to original position')
+        self._rotor.velocity = self._positioning_velocity
         self._rotor.move_absolute(orig_position)
         while np.abs(self._rotor.position - orig_position) > self._angle_accuracy:
             if self._debug:
                 print("\tPosition: %f" % self._rotor.position)
             sleep(1)
         self.log_timestamped('Original position reached')
-
 
         t_stop = datetime.now()
         self.log_timestamped('Continuous sweep finished in %s' % str(t_stop - t_start))
