@@ -36,6 +36,7 @@ class NewportMM4005(Rotor):
 
     def __init__(self, address=DEFAULT_ADDRESS, velocity=1, acceleration=1, debug=False, **kwargs):
         super().__init__(address=address, **kwargs)
+        self._max_velocity = kwargs.get('max_velocity', 8.0)
         self._debug = debug
         self.velocity = velocity
         self.acceleration = acceleration
@@ -63,7 +64,10 @@ class NewportMM4005(Rotor):
 
     @velocity.setter
     def velocity(self, velocity):
-        self.write('4VA%f;' % velocity)  # units/second
+        if 0 < velocity <= self._max_velocity:
+            self.write('4VA%.1f;' % velocity)  # units/second
+        else:
+            print('WARNING: %f is out of velocity bounds (0, %f) - command discarded' % (velocity, self._max_velocity))
 
     @property
     def acceleration(self):
